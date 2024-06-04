@@ -26,6 +26,7 @@ struct UserData {
     string firstName;
     string lastName;
     string visitTime;
+    string userid;
 };
 
 unordered_map<int64_t, State> userStates;
@@ -39,6 +40,7 @@ unordered_map<int64_t, UserData> userData;
 void saveUserDataToFile(const UserData& userData) {
     ofstream outFile("visit_data.txt", ios::app);
     if (outFile.is_open()) {
+        outFile << "UserId: " << userData.userid << '\n';
         outFile << "First Name: " << userData.firstName << "\n";
         outFile << "Last Name: " << userData.lastName << "\n";
         outFile << "Visit Time: " << userData.visitTime << "\n\n";
@@ -66,6 +68,7 @@ void handleUserState(const Bot& bot, int64_t userId, Message::Ptr message) {
             userStates[userId] = State::FIRST_NAME;
             break;
         case State::FIRST_NAME:
+            userData[userId].userid = to_string(userId);
             userData[userId].firstName = message->text;
             bot.getApi().sendMessage(userId, "Введите фамилию:");
             userStates[userId] = State::LAST_NAME;
@@ -82,7 +85,8 @@ void handleUserState(const Bot& bot, int64_t userId, Message::Ptr message) {
             messageText = "Данные для отправки:\n";
             messageText += "Имя: " + userData[userId].firstName + "\n";
             messageText += "Фамилия: " + userData[userId].lastName + "\n";
-            messageText += "Время посещения: " + userData[userId].visitTime;
+            messageText += "Время посещения: " + userData[userId].visitTime + "\n";
+            messageText += "UserId: " + to_string(userId);
             bot.getApi().sendMessage(recipientId, messageText);
             bot.getApi().sendMessage(userId, "Ваши данные отправлены.");
             userStates[userId] = State::DONE;
@@ -112,6 +116,18 @@ int main()
             userData[userId] = {};  // Очищаем данные пользователя
             userStates[userId] = State::START;
             bot.getApi().sendMessage(userId, "Бронирование отменено. Начните заново.");
+            string cancelMessage = "Пользователь " + to_string(userId) + " отменил бронирование.";
+            bot.getApi().sendMessage(recipientId, cancelMessage);
+            ofstream outFile("visit_data.txt", ios::app);
+            if (outFile.is_open())
+            {
+                outFile << "The user " + to_string(userId) + " has cancelled the reservation." << '\n';
+                outFile.close();
+            }
+            else {
+                cerr << "Unable to open file for writing." << endl;
+            }
+            
         }
         else {
             handleUserState(bot, userId, message);

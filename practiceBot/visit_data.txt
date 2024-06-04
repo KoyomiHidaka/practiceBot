@@ -1,8 +1,0 @@
-First Name: Marat
-Last Name: Abishev
-Visit Time: 9:20
-
-First Name: Almaz
-Last Name: Kabiden
-Visit Time: 1:30
-
