@@ -1,7 +1,4 @@
-﻿// practiceBot.cpp : This file contains the 'main' function. Program execution begins and ends there.
-
-
-#include <iostream>
+﻿#include <iostream>
 #include <iostream>
 #include <tgbot/tgbot.h>
 #include <unordered_map>
@@ -55,7 +52,8 @@ void saveUserDataToFile(const UserData& userData) {
 
 
 
-
+bool ninetwenty = true, nine = true, ninezerofive = true, nineten = true, ninefiveteen = true, ninetwentyfive = true, ninethirty = true, ninethirtyfive = true,
+nineforty = true, ninefortyfive = true, ninefifty = true, ninefiftyfive = true, ten = true;
 
 
 string messageText;
@@ -80,17 +78,22 @@ void handleUserState(const Bot& bot, int64_t userId, Message::Ptr message) {
             break;
         case State::VISIT_TIME:
             userData[userId].visitTime = message->text;
-            saveUserDataToFile(userData[userId]);
-            // Отправляем данные конкретному пользователю
-            messageText = "Данные для отправки:\n";
-            messageText += "Имя: " + userData[userId].firstName + "\n";
-            messageText += "Фамилия: " + userData[userId].lastName + "\n";
-            messageText += "Время посещения: " + userData[userId].visitTime + "\n";
-            messageText += "UserId: " + to_string(userId);
-            bot.getApi().sendMessage(recipientId, messageText);
-            bot.getApi().sendMessage(userId, "Ваши данные отправлены.");
-            userStates[userId] = State::DONE;
-            break;
+            if (userData[userId].visitTime == "9:00") {
+                if (nine) {
+                    saveUserDataToFile(userData[userId]);
+                    // Отправляем данные конкретному пользователю
+                    messageText = "Данные для отправки:\n";
+                    messageText += "Имя: " + userData[userId].firstName + "\n";
+                    messageText += "Фамилия: " + userData[userId].lastName + "\n";
+                    messageText += "Время посещения: " + userData[userId].visitTime + "\n";
+                    messageText += "UserId: " + to_string(userId);
+                    bot.getApi().sendMessage(recipientId, messageText);
+                    bot.getApi().sendMessage(userId, "Ваши данные отправлены.");
+                    userStates[userId] = State::DONE;
+                    break;
+                }
+            }
+            
         case State::DONE:
             bot.getApi().sendMessage(userId, "Вы уже ввели свои данные.");
             break;
@@ -139,7 +142,7 @@ int main()
     try {
         TgBot::TgLongPoll longPoll(bot);
         while (true) {
-            cout << "Long poll started" << endl;
+            cout << "Long poll started^^" << endl;
             longPoll.start();
         }
     } catch (TgBot::TgException& e) {

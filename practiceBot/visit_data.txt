@@ -1,0 +1,32 @@
+UserId: 821073687
+First Name: марат
+Last Name: абишев
+Visit Time: 16;00
+
+The user 821073687 has cancelled the reservation.
+UserId: 1217311673
+First Name: Марат
+Last Name: А
+Visit Time: 88
+
+The user 1217311673 has cancelled the reservation.
+UserId: 1217311673
+First Name: H
+Last Name: Hh
+Visit Time: 9:20
+
+UserId: 1217311673
+First Name: G
+Last Name: H
+Visit Time: 9:20
+
+UserId: 5902853103
+First Name: Кота
+Last Name: Рыба
+Visit Time: 3
+
+UserId: 1217311673
+First Name: H
+Last Name: G
+Visit Time: 9:20
+
