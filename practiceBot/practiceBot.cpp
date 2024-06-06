@@ -29,7 +29,19 @@ struct UserData {
 unordered_map<int64_t, State> userStates;
 unordered_map<int64_t, UserData> userData;
 
+struct TimeSlot
+{
+    string time;
+    bool isAvailable;
+};
 
+TimeSlot timeSlots[] = {
+        {"9:00", true}, {"9:05", true}, {"9:10", true}, {"9:15", true}, {"9:20", true},
+        {"9:25", true}, {"9:30", true}, {"9:35", true}, {"9:40", true}, {"9:45", true},
+        {"9:50", true}, {"9:55", true}, {"10:00", true}
+};
+
+bool found = false;
 
 
 
@@ -52,12 +64,12 @@ void saveUserDataToFile(const UserData& userData) {
 
 
 
-bool ninetwenty = true, nine = true, ninezerofive = true, nineten = true, ninefiveteen = true, ninetwentyfive = true, ninethirty = true, ninethirtyfive = true,
-nineforty = true, ninefortyfive = true, ninefifty = true, ninefiftyfive = true, ten = true;
+
 
 
 string messageText;
-
+string searchTime;
+string timetable;
 
 void handleUserState(const Bot& bot, int64_t userId, Message::Ptr message) {
     switch (userStates[userId]) {
@@ -73,26 +85,55 @@ void handleUserState(const Bot& bot, int64_t userId, Message::Ptr message) {
             break;
         case State::LAST_NAME:
             userData[userId].lastName = message->text;
+            bot.getApi().sendMessage(userId, "Доступное время на сегодня: ");
+            for (const auto& slot : timeSlots) {
+                if (slot.isAvailable) {
+                    timetable = " Доступное время на сегодня. ";
+                    timetable += slot.time;
+                    //bot.getApi().sendMessage(userId, timetable + " Доступное время на сегодня. ");
+                    cout << slot.time << " is available. ";
+                }
+            }
+            bot.getApi().sendMessage(userId, timetable + " Доступное время на сегодня. ");
             bot.getApi().sendMessage(userId, "Введите удобное время посещения:");
             userStates[userId] = State::VISIT_TIME;
             break;
         case State::VISIT_TIME:
             userData[userId].visitTime = message->text;
-            if (userData[userId].visitTime == "9:00") {
-                if (nine) {
-                    saveUserDataToFile(userData[userId]);
-                    // Отправляем данные конкретному пользователю
-                    messageText = "Данные для отправки:\n";
-                    messageText += "Имя: " + userData[userId].firstName + "\n";
-                    messageText += "Фамилия: " + userData[userId].lastName + "\n";
-                    messageText += "Время посещения: " + userData[userId].visitTime + "\n";
-                    messageText += "UserId: " + to_string(userId);
-                    bot.getApi().sendMessage(recipientId, messageText);
-                    bot.getApi().sendMessage(userId, "Ваши данные отправлены.");
-                    userStates[userId] = State::DONE;
+            searchTime = userData[userId].visitTime;
+           //for (auto& slot : timeSlots) {
+           //    if (slot.time == searchTime) {
+           //        slot.isAvailable = false;
+           //        found = true;
+           //        break;
+           //    }
+           //}
+            for (auto& slot : timeSlots) {
+                if (!slot.isAvailable && slot.time == searchTime) {
+                    slot.isAvailable = false;
+                    found = true;
                     break;
                 }
             }
+            if (found)
+            {
+                bot.getApi().sendMessage(userId, "Время " + searchTime + " уже занято, выберите другое");
+            }
+            //if (userData[userId].visitTime == "9:00")
+            //{
+            //    timeSlots[0].isAvailable = false;
+            //}
+            saveUserDataToFile(userData[userId]);
+            // Отправляем данные конкретному пользователю
+            messageText = "Данные для отправки:\n";
+            messageText += "Имя: " + userData[userId].firstName + "\n";
+            messageText += "Фамилия: " + userData[userId].lastName + "\n";
+            messageText += "Время посещения: " + userData[userId].visitTime + "\n";
+            messageText += "UserId: " + to_string(userId);
+            bot.getApi().sendMessage(recipientId, messageText);
+            bot.getApi().sendMessage(userId, "Ваши данные отправлены.");
+            userStates[userId] = State::DONE;
+            break;
             
         case State::DONE:
             bot.getApi().sendMessage(userId, "Вы уже ввели свои данные.");
