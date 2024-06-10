@@ -24,6 +24,11 @@ struct UserData {
     string lastName;
     string visitTime;
     string userid;
+    void ClearNames() {
+        firstName.clear();
+        lastName.clear();
+        visitTime.clear();
+    }
 };
 
 unordered_map<int64_t, State> userStates;
@@ -66,7 +71,7 @@ void saveUserDataToFile(const UserData& userData) {
 
 
 
-
+bool first = true;
 string messageText;
 string searchTime;
 string timetable;
@@ -85,16 +90,18 @@ void handleUserState(const Bot& bot, int64_t userId, Message::Ptr message) {
             break;
         case State::LAST_NAME:
             userData[userId].lastName = message->text;
-            bot.getApi().sendMessage(userId, "Доступное время на сегодня: ");
+            //bot.getApi().sendMessage(userId, "Доступное время на сегодня: ");
             for (const auto& slot : timeSlots) {
                 if (slot.isAvailable) {
-                    timetable = " Доступное время на сегодня. ";
+                    if (!first) {
+                        timetable += ", ";
+                    }
                     timetable += slot.time;
-                    //bot.getApi().sendMessage(userId, timetable + " Доступное время на сегодня. ");
-                    cout << slot.time << " is available. ";
+                    first = false;
                 }
             }
-            bot.getApi().sendMessage(userId, timetable + " Доступное время на сегодня. ");
+            bot.getApi().sendMessage(userId, "Доступное время на сегодня: " + timetable);
+            //bot.getApi().sendMessage(userId, timetable + " Доступное время на сегодня. ");
             bot.getApi().sendMessage(userId, "Введите удобное время посещения:");
             userStates[userId] = State::VISIT_TIME;
             break;
@@ -118,28 +125,42 @@ void handleUserState(const Bot& bot, int64_t userId, Message::Ptr message) {
             if (found)
             {
                 bot.getApi().sendMessage(userId, "Время " + searchTime + " уже занято, выберите другое");
+                userStates[userId] = State::LAST_NAME;
+            }
+            if (!found) {
+                saveUserDataToFile(userData[userId]);
+                messageText = "Данные для отправки:\n";
+                messageText += "Имя: " + userData[userId].firstName + "\n";
+                messageText += "Фамилия: " + userData[userId].lastName + "\n";
+                messageText += "Время посещения: " + userData[userId].visitTime + "\n";
+                messageText += "UserId: " + to_string(userId);
+                bot.getApi().sendMessage(recipientId, messageText);
+                bot.getApi().sendMessage(userId, "Ваши данные отправлены.");
+                userStates[userId] = State::DONE;
+                break;
             }
             //if (userData[userId].visitTime == "9:00")
             //{
             //    timeSlots[0].isAvailable = false;
             //}
-            saveUserDataToFile(userData[userId]);
+            //saveUserDataToFile(userData[userId]);
             // Отправляем данные конкретному пользователю
-            messageText = "Данные для отправки:\n";
-            messageText += "Имя: " + userData[userId].firstName + "\n";
-            messageText += "Фамилия: " + userData[userId].lastName + "\n";
-            messageText += "Время посещения: " + userData[userId].visitTime + "\n";
-            messageText += "UserId: " + to_string(userId);
-            bot.getApi().sendMessage(recipientId, messageText);
-            bot.getApi().sendMessage(userId, "Ваши данные отправлены.");
-            userStates[userId] = State::DONE;
-            break;
+            //messageText = "Данные для отправки:\n";
+            //messageText += "Имя: " + userData[userId].firstName + "\n";
+            //messageText += "Фамилия: " + userData[userId].lastName + "\n";
+            //messageText += "Время посещения: " + userData[userId].visitTime + "\n";
+            //messageText += "UserId: " + to_string(userId);
+            //bot.getApi().sendMessage(recipientId, messageText);
+            //bot.getApi().sendMessage(userId, "Ваши данные отправлены.");
+            //userStates[userId] = State::DONE;
+            //break;
             
         case State::DONE:
             bot.getApi().sendMessage(userId, "Вы уже ввели свои данные.");
             break;
     }
 }
+
 
 
 
@@ -157,7 +178,17 @@ int main()
 
         // Обработка специальной команды для отмены
         if (message->text == "/cancel") {
-            userData[userId] = {};  // Очищаем данные пользователя
+            string cancelledTime = userData[userId].visitTime;
+            userData[userId].ClearNames();
+            for (auto& slot: timeSlots)
+            {
+                if (slot.time == cancelledTime) {
+                    slot.isAvailable = true;
+                    break;
+                }
+            }
+            cout << cancelledTime;
+            //userData[userId] = {};  // Очищаем данные пользователя
             userStates[userId] = State::START;
             bot.getApi().sendMessage(userId, "Бронирование отменено. Начните заново.");
             string cancelMessage = "Пользователь " + to_string(userId) + " отменил бронирование.";

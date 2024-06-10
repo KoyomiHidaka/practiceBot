@@ -95,3 +95,33 @@ First Name: h
 Last Name: g
 Visit Time: 9:00
 
+UserId: 1217311673
+First Name: fd
+Last Name: fd
+Visit Time: 9:00
+
+The user 1217311673 has cancelled the reservation.
+UserId: 1217311673
+First Name: fd
+Last Name: d
+Visit Time: 9:00
+
+UserId: 1217311673
+First Name: df
+Last Name: df
+Visit Time: 9:00
+
+The user 1217311673 has cancelled the reservation.
+UserId: 1217311673
+First Name: df
+Last Name: df
+Visit Time: 9:00
+
+The user 1217311673 has cancelled the reservation.
+UserId: 1217311673
+First Name: fg
+Last Name: fg
+Visit Time: 9:20
+
+The user 1217311673 has cancelled the reservation.
+The user 1217311673 has cancelled the reservation.
