@@ -3,8 +3,9 @@
 #include <tgbot/tgbot.h>
 #include <unordered_map>
 #pragma execution_character_set("utf-8")
-// Замените YOUR_RECIPIENT_ID на реальный ID получателя сообщений
+// Замените recipientId на ID получателя сообщений
 const int64_t recipientId = 1217311673;
+
 
 
 using namespace TgBot;
@@ -19,12 +20,15 @@ enum class State {
     DONE
 };
 
+
+// Структура хранящая данные пользователя
+
 struct UserData {
     string firstName;
     string lastName;
     string visitTime;
     string userid;
-    void ClearNames() {
+    void ClearAll() {
         firstName.clear();
         lastName.clear();
         visitTime.clear();
@@ -34,22 +38,29 @@ struct UserData {
 unordered_map<int64_t, State> userStates;
 unordered_map<int64_t, UserData> userData;
 
+
+// Структура хранящая параметры времени
+
 struct TimeSlot
 {
     string time;
     bool isAvailable;
 };
 
+
+// Массив хранящий время
+
 TimeSlot timeSlots[] = {
-        {"9:00", true}, {"9:05", true}, {"9:10", true}, {"9:15", true}, {"9:20", true},
-        {"9:25", true}, {"9:30", true}, {"9:35", true}, {"9:40", true}, {"9:45", true},
-        {"9:50", true}, {"9:55", true}, {"10:00", true}
+        {"9:00", true}, {"9:10", true}, {"9:20", true}, {"9:30", true}, {"9:40", true},
+        {"9:50", true}, {"10:00", true}, {"10:10", true}, {"10:20", true}, {"10:30", true},
+        {"10:40", true}, {"10:50", true}, {"11:00", true}, {"11:10", true}, {"11:20", true},
+        {"11:30", true}, {"11:40", true}, {"11:50", true}, {"12:00", true}, {"12:10", true},
+        {"12:20", true}, {"12:30", true}, {"12:40", true}, {"12:50", true}, {"13:00", true}
 };
 
-bool found = false;
 
 
-
+// Блок кода сохраняющий данные в файл
 
 void saveUserDataToFile(const UserData& userData) {
     ofstream outFile("visit_data.txt", ios::app);
@@ -67,14 +78,14 @@ void saveUserDataToFile(const UserData& userData) {
 
 
 
-
-
-
-
 bool first = true;
+bool found = false;
 string messageText;
 string searchTime;
 string timetable;
+
+
+// Блок обработки машины состояний (FSM Context)
 
 void handleUserState(const Bot& bot, int64_t userId, Message::Ptr message) {
     switch (userStates[userId]) {
@@ -90,7 +101,6 @@ void handleUserState(const Bot& bot, int64_t userId, Message::Ptr message) {
             break;
         case State::LAST_NAME:
             userData[userId].lastName = message->text;
-            //bot.getApi().sendMessage(userId, "Доступное время на сегодня: ");
             for (const auto& slot : timeSlots) {
                 if (slot.isAvailable) {
                     if (!first) {
@@ -100,21 +110,13 @@ void handleUserState(const Bot& bot, int64_t userId, Message::Ptr message) {
                     first = false;
                 }
             }
-            bot.getApi().sendMessage(userId, "Доступное время на сегодня: " + timetable);
-            //bot.getApi().sendMessage(userId, timetable + " Доступное время на сегодня. ");
+            bot.getApi().sendMessage(userId, "Доступное время на сегодня: " + timetable); 
             bot.getApi().sendMessage(userId, "Введите удобное время посещения:");
             userStates[userId] = State::VISIT_TIME;
             break;
         case State::VISIT_TIME:
             userData[userId].visitTime = message->text;
             searchTime = userData[userId].visitTime;
-           //for (auto& slot : timeSlots) {
-           //    if (slot.time == searchTime) {
-           //        slot.isAvailable = false;
-           //        found = true;
-           //        break;
-           //    }
-           //}
             for (auto& slot : timeSlots) {
                 if (!slot.isAvailable && slot.time == searchTime) {
                     slot.isAvailable = false;
@@ -139,28 +141,11 @@ void handleUserState(const Bot& bot, int64_t userId, Message::Ptr message) {
                 userStates[userId] = State::DONE;
                 break;
             }
-            //if (userData[userId].visitTime == "9:00")
-            //{
-            //    timeSlots[0].isAvailable = false;
-            //}
-            //saveUserDataToFile(userData[userId]);
-            // Отправляем данные конкретному пользователю
-            //messageText = "Данные для отправки:\n";
-            //messageText += "Имя: " + userData[userId].firstName + "\n";
-            //messageText += "Фамилия: " + userData[userId].lastName + "\n";
-            //messageText += "Время посещения: " + userData[userId].visitTime + "\n";
-            //messageText += "UserId: " + to_string(userId);
-            //bot.getApi().sendMessage(recipientId, messageText);
-            //bot.getApi().sendMessage(userId, "Ваши данные отправлены.");
-            //userStates[userId] = State::DONE;
-            //break;
-            
         case State::DONE:
             bot.getApi().sendMessage(userId, "Вы уже ввели свои данные.");
             break;
     }
 }
-
 
 
 
@@ -175,11 +160,12 @@ int main()
         if (userStates.find(userId) == userStates.end()) {
             userStates[userId] = State::START;
         }
-
-        // Обработка специальной команды для отмены
+        // Блок обработки специальной команды для отмены
         if (message->text == "/cancel") {
             string cancelledTime = userData[userId].visitTime;
-            userData[userId].ClearNames();
+            string canceledName = userData[userId].firstName;
+            string canceledLastname = userData[userId].lastName;
+            userData[userId].ClearAll();
             for (auto& slot: timeSlots)
             {
                 if (slot.time == cancelledTime) {
@@ -187,11 +173,9 @@ int main()
                     break;
                 }
             }
-            cout << cancelledTime;
-            //userData[userId] = {};  // Очищаем данные пользователя
             userStates[userId] = State::START;
             bot.getApi().sendMessage(userId, "Бронирование отменено. Начните заново.");
-            string cancelMessage = "Пользователь " + to_string(userId) + " отменил бронирование.";
+            string cancelMessage = "Пользователь " + to_string(userId)+ " (" + canceledName + ", " + canceledLastname + ")" + " отменил бронирование.";
             bot.getApi().sendMessage(recipientId, cancelMessage);
             ofstream outFile("visit_data.txt", ios::app);
             if (outFile.is_open())
@@ -209,7 +193,7 @@ int main()
         }
         });
     
-
+// Блок запуска бота
 
     try {
         TgBot::TgLongPoll longPoll(bot);

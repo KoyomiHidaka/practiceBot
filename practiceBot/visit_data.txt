@@ -125,3 +125,15 @@ Visit Time: 9:20
 
 The user 1217311673 has cancelled the reservation.
 The user 1217311673 has cancelled the reservation.
+UserId: 1217311673
+First Name: H
+Last Name: H
+Visit Time: 9:00
+
+The user 1217311673 has cancelled the reservation.
+UserId: 1217311673
+First Name: Marat
+Last Name: Абишев
+Visit Time: 9:00
+
+The user 1217311673 has cancelled the reservation.
